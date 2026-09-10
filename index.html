@@ -6,6 +6,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 	<link type="text/css" rel="stylesheet" href="main.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
 <body>
@@ -49,26 +50,7 @@
 			}
 		})
 
-
 		init();
-
-		pmremGenerator = new THREE.PMREMGenerator(renderer);
-		pmremGenerator.compileEquirectangularShader();
-
-		controls = new OrbitControls(camera, renderer.domElement);
-		controls.addEventListener('change', render);
-		controls.minDistance = 2;
-		controls.maxDistance = 10;
-		controls.target.set(0, 0, -0.2);
-		// contrôle la vitesse de rotation
-		controls.enableDamping = true;
-		controls.dampingFactor = 0.05;
-
-		var directionalLight = new THREE.DirectionalLight(0xdddddd, 1);
-		directionalLight.position.set(0, 0, 1).normalize();
-		scene.add(directionalLight);
-		var ambientLight = new THREE.AmbientLight(0x222222);
-		scene.add(ambientLight);
 
 		function init() {
 
@@ -98,8 +80,27 @@
 
 			//
 
-			const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
+			pmremGenerator = new THREE.PMREMGenerator(renderer);
+			pmremGenerator.compileEquirectangularShader();
 
+			controls = new OrbitControls(camera, renderer.domElement);
+			controls.addEventListener('change', render);
+			controls.minDistance = 2;
+			controls.maxDistance = 10;
+			controls.target.set(0, 0, -0.2);
+			// contrôle la vitesse de rotation
+			controls.enableDamping = true;
+			controls.dampingFactor = 0.05;
+
+			var directionalLight = new THREE.DirectionalLight(0xdddddd, 1);
+			directionalLight.position.set(0, 0, 1).normalize();
+			scene.add(directionalLight);
+			var ambientLight = new THREE.AmbientLight(0x222222);
+			scene.add(ambientLight);
+
+			//
+
+			const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
 
 			function onSelect() {
 
@@ -143,6 +144,12 @@
 			camera.updateProjectionMatrix();
 
 			renderer.setSize(window.innerWidth, window.innerHeight);
+
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
 
 		}
 
@@ -231,10 +238,6 @@
 
 		}
 
-
-	</script>
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
 	</script>
 
 	<div id="content">
@@ -262,27 +265,6 @@
 			document.getElementById("mySidenav").style.width = "0";
 		}
 	</script>
-	<script>
-		function openNav() {
-			document.getElementById("mySidenav").style.width = "250px";
-		}
-		function closeNav() {
-			document.getElementById("mySidenav").style.width = "0";
-		}
-	</script>
-	<script type="importmap">
-{
-"imports": {
-"three": "./build/three.module.js",
-"three/addons/": "./jsm/"
-}
-}
-</script>
-
-
-
-
-
 
 </body>
 
