@@ -25,15 +25,15 @@
 		import * as THREE from 'three';
 		import { ARButton } from 'three/addons/webxr/ARButton.js';
 
-
 		let container;
 		let camera, scene, renderer;
-		let controller1, controller2;
 
 		let reticle, pmremGenerator, current_object, controls, envmap;
 
 		let hitTestSource = null;
 		let hitTestSourceRequested = false;
+
+		let touchDown, touchX, touchY, deltaX, deltaY;
 
 		let current_url = ""; //définir cette variable avec une url par défaut d’une objet 3D sotcké dans les assets si vous utilisez Glitch, sinon avec le chemin d’un objec 3D de vos assets
 		$(".ar-object").click(function () {
@@ -74,21 +74,18 @@
 
 			//
 
-			document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+			// AR SETUP
+			let options = {
+				requiredFeatures: ['hit-test'],
+				optionalFeatures: ['dom-overlay'],
+			}
+			options.domOverlay = { root: document.getElementById('content') };
+			document.body.appendChild(ARButton.createButton(renderer, options));
 
 			//
 
 			pmremGenerator = new THREE.PMREMGenerator(renderer);
 			pmremGenerator.compileEquirectangularShader();
-
-			controls = new OrbitControls(camera, renderer.domElement);
-			controls.addEventListener('change', render);
-			controls.minDistance = 2;
-			controls.maxDistance = 10;
-			controls.target.set(0, 0, -0.2);
-			// contrôle la vitesse de rotation
-			controls.enableDamping = true;
-			controls.dampingFactor = 0.05;
 
 			var directionalLight = new THREE.DirectionalLight(0xdddddd, 1);
 			directionalLight.position.set(0, 0, 1).normalize();
@@ -97,30 +94,6 @@
 			scene.add(ambientLight);
 
 			//
-
-			const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
-
-			function onSelect() {
-
-				if (reticle.visible) {
-
-					const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
-					const mesh = new THREE.Mesh(geometry, material);
-					reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-					mesh.scale.y = Math.random() * 2 + 1;
-					scene.add(mesh);
-
-				}
-
-			}
-
-			controller1 = renderer.xr.getController(0);
-			controller1.addEventListener('select', onSelect);
-			scene.add(controller1);
-
-			controller2 = renderer.xr.getController(1);
-			controller2.addEventListener('select', onSelect);
-			scene.add(controller2);
 
 			reticle = new THREE.Mesh(
 				new THREE.RingGeometry(0.15, 0.2, 32).rotateX(- Math.PI / 2),
@@ -133,6 +106,31 @@
 			//
 
 			window.addEventListener('resize', onWindowResize);
+
+			// Rotation tactile de l'objet courant
+			renderer.domElement.addEventListener('touchstart', function (e) {
+				e.preventDefault();
+				touchDown = true;
+				touchX = e.touches[0].pageX;
+				touchY = e.touches[0].pageY;
+			}, false);
+
+			renderer.domElement.addEventListener('touchend', function (e) {
+				e.preventDefault();
+				touchDown = false;
+			}, false);
+
+			renderer.domElement.addEventListener('touchmove', function (e) {
+				e.preventDefault();
+				if (!touchDown) {
+					return;
+				}
+				deltaX = e.touches[0].pageX - touchX;
+				deltaY = e.touches[0].pageY - touchY;
+				touchX = e.touches[0].pageX;
+				touchY = e.touches[0].pageY;
+				rotateObject();
+			}, false);
 
 		}
 
@@ -150,6 +148,29 @@
 			renderer.render(scene, camera);
 
 		}
+
+		function rotateObject() {
+			if (current_object && reticle.visible) {
+				current_object.rotation.y += deltaX / 100;
+			}
+		}
+
+		function arPlace() {
+			if (reticle.visible) {
+				current_object.position.setFromMatrixPosition(reticle.matrix);
+				current_object.visible = true;
+			}
+		}
+
+		$("#place-button").click(function () {
+			arPlace();
+		});
+
+		$("#ARButton").click(function () {
+			if (current_object) {
+				current_object.visible = false;
+			}
+		});
 
 		//
 
@@ -177,6 +198,16 @@
 						hitTestSourceRequested = false;
 						hitTestSource = null;
 
+						reticle.visible = false;
+
+						if (current_object) {
+							var box = new THREE.Box3();
+							box.setFromObject(current_object);
+							box.center(controls.target);
+						}
+
+						document.getElementById("place-button").style.display = "none";
+
 					});
 
 					hitTestSourceRequested = true;
@@ -199,6 +230,9 @@
 						reticle.visible = false;
 
 					}
+
+					// affiche le bouton PLACE uniquement quand le réticule détecte une surface
+					document.getElementById("place-button").style.display = reticle.visible ? "block" : "none";
 
 				}
 
@@ -246,12 +280,11 @@
 			<a class="ar-object" id="3" href="#">item_3</a>
 			<a class="ar-object" id="4" href="#">item_4</a>
 		</div>
+
 		<div id="container" style="position: fixed;"></div>
 		<span style="font-size:30px;cursor:pointer;position: absolute;" onclick="openNav()">&#9776; open</span>
+		<button type="button" id="place-button">PLACE</button>
 	</div>
-
-	
-	<span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; </span>
 
 	<script>
 		function openNav() {
