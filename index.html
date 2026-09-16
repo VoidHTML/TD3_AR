@@ -188,7 +188,7 @@
 			}
 		});
 
-		
+		//
 
 		function animate(timestamp, frame) {
 
@@ -276,9 +276,9 @@
 						scene.add(current_object);
 						arPlace();
 						// centrer les objets sur la scène
-						const box = new THREE.Box3().setFromObject(current_object);
-						const center = box.getCenter(new THREE.Vector3());
-						controls.target.copy(center);
+						var box = new THREE.Box3();
+						box.setFromObject(current_object);
+						box.center(controls.target);
 						controls.update();
 						render();
 					});
