@@ -38,11 +38,9 @@
 
 		let touchDown, touchX, touchY, deltaX, deltaY;
 
-		let current_url = ""; //définir cette variable avec une url par défaut d’une objet 3D sotcké dans les assets si vous utilisez Glitch, sinon avec le chemin d’un objec 3D de vos assets
+		let current_url = ""; 
 		$(".ar-object").click(function () {
-			// update current object url
 			current_url = $(this).attr("id");
-			// load object in scene only when the AR is not started
 			if (!renderer.xr.isPresenting) {
 				if (current_object != null) {
 					scene.remove(current_object);
@@ -66,7 +64,7 @@
 			light.position.set(0.5, 1, 0.25);
 			scene.add(light);
 
-			//
+		
 
 			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 			renderer.setPixelRatio(window.devicePixelRatio);
@@ -75,9 +73,7 @@
 			renderer.xr.enabled = true;
 			container.appendChild(renderer.domElement);
 
-			//
-
-			// AR SETUP (un seul bouton AR, avec dom-overlay pour le bouton PLACE)
+			
 			let options = {
 				requiredFeatures: ['hit-test'],
 				optionalFeatures: ['dom-overlay'],
@@ -257,17 +253,17 @@
 		function loadModel(model) {
 			new RGBELoader()
 				.setDataType(THREE.HalfFloatType)
-				.setPath('textures/') // supprimer cette ligne sous Glitch
-				.load('photo_studio_01_1k.hdr', function (texture) { // adapter le chemin du fichier hdr en fonction de la plateforme que vous utilisez
+				.setPath('textures/') 
+				.load('photo_studio_01_1k.hdr', function (texture) { 
 					envmap = pmremGenerator.fromEquirectangular(texture).texture;
-					texture.flipY = false; // Désactiver y-flip pour éviter l'avertissement
-					texture.premultiplyAlpha = false; // Désactiver alpha-premult pour éviter l'avertissement
+					texture.flipY = false; 
+					texture.premultiplyAlpha = false; 
 					scene.environment = envmap;
 					texture.dispose();
 					pmremGenerator.dispose();
 					render();
-					var loader = new GLTFLoader().setPath('3d/'); // supprimer le setPath sous Glitch
-					loader.load(model + ".glb", function (glb) { // uniquement model sous Glitch
+					var loader = new GLTFLoader().setPath('3d/'); 
+					loader.load(model + ".glb", function (glb) { /
 						current_object = glb.scene;
 						scene.add(current_object);
 						arPlace();
