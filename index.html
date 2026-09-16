@@ -26,14 +26,15 @@
 
 		import * as THREE from 'three';
 		import { ARButton } from 'three/addons/webxr/ARButton.js';
-		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-		import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+		import { OrbitControls } from 'three/addons/webxr/controls/OrbitControls.js';
+		import { GLTFLoader } from 'three/addons/webxr/loaders/GLTFLoader.js';
+		import { RGBELoader } from 'three/addons/webxr/loaders/RGBELoader.js';
+
 
 		let container;
 		let camera, scene, renderer;
 
-		let reticle, pmremGenerator, current_object = null, controls, envmap;
+		let reticle, pmremGenerator, current_object, controls, envmap;
 
 		let hitTestSource = null;
 		let hitTestSourceRequested = false;
@@ -55,7 +56,8 @@
 
 		function init() {
 
-			container = document.getElementById('container');
+			container = document.createElement('div');
+			document.body.appendChild(container);
 
 			scene = new THREE.Scene();
 
@@ -65,7 +67,7 @@
 			light.position.set(0.5, 1, 0.25);
 			scene.add(light);
 
-			//
+
 
 			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 			renderer.setPixelRatio(window.devicePixelRatio);
@@ -74,7 +76,6 @@
 			renderer.xr.enabled = true;
 			container.appendChild(renderer.domElement);
 
-			//
 
 			let options = {
 				requiredFeatures: ['hit-test'],
@@ -142,16 +143,14 @@
 				rotateObject();
 			}, false);
 
-			// Tap sur l'écran en AR pour placer l'objet (équivalent du bouton PLACE)
 			const controller = renderer.xr.getController(0);
 			controller.addEventListener('select', onSelect);
 			scene.add(controller);
 
 		}
 
-		function onWindowResize() {
 
-			if (renderer.xr.isPresenting) return;
+		function onWindowResize() {
 
 			camera.aspect = window.innerWidth / window.innerHeight;
 			camera.updateProjectionMatrix();
@@ -173,18 +172,10 @@
 		}
 
 		function arPlace() {
-			if (!current_object) {
-				console.warn("Objet non chargé : placement impossible");
-				return;
-			}
 			if (reticle.visible) {
 				current_object.position.setFromMatrixPosition(reticle.matrix);
 				current_object.visible = true;
 			}
-		}
-
-		function onSelect() {
-			arPlace();
 		}
 
 		$("#place-button").click(function () {
@@ -197,7 +188,7 @@
 			}
 		});
 
-		//
+		
 
 		function animate(timestamp, frame) {
 
@@ -226,9 +217,9 @@
 						reticle.visible = false;
 
 						if (current_object) {
-							const box = new THREE.Box3().setFromObject(current_object);
-							const center = box.getCenter(new THREE.Vector3());
-							controls.target.copy(center);
+							var box = new THREE.Box3();
+							box.setFromObject(current_object);
+							box.center(controls.target);
 						}
 
 						document.getElementById("place-button").style.display = "none";
@@ -271,16 +262,16 @@
 			new RGBELoader()
 				.setDataType(THREE.HalfFloatType)
 				.setPath('textures/') // supprimer cette ligne sous Glitch
-				.load('photo_studio_01_1k.hdr', function (texture) { // adapter le chemin du fichier hdr en fonction de la plateforme que vous utilisez
+				.load('photo_studio_01_1k.hdr', function (texture) {
 					envmap = pmremGenerator.fromEquirectangular(texture).texture;
-					texture.flipY = false; // Désactiver y-flip pour éviter l'avertissement
-					texture.premultiplyAlpha = false; // Désactiver alpha-premult pour éviter l'avertissement
+					texture.flipY = false; // Désactiver y-flip pour éviterl'avertissement
+					texture.premultiplyAlpha = false; // Désactiver alpha-premult pouréviter l'avertissement
 					scene.environment = envmap;
 					texture.dispose();
 					pmremGenerator.dispose();
 					render();
-					var loader = new GLTFLoader().setPath('3d/'); // supprimer le setPath sous Glitch
-					loader.load(model + ".glb", function (glb) { // uniquement model sous Glitch
+					var loader = new GLTFLoader().setPath('3d/'); // supprimer lesetPath sous Glitch
+					loader.load(model + ".glb", function (glb) { // uniquement modelsous Glitch
 						current_object = glb.scene;
 						scene.add(current_object);
 						arPlace();
@@ -291,9 +282,27 @@
 						controls.update();
 						render();
 					});
-				});
+				})
+
+
+			function onSelect() {
+				if (reticle.visible) {
+					current_object.position.setFromMatrixPosition(reticle.matrix);
+					current_object.visible = true;
+				}
+			}
+
+			function onWindowResize() {
+				if (renderer.xr.isPresenting) return;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
 
 		}
+
+
 
 	</script>
 
