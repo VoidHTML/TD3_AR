@@ -141,7 +141,12 @@
 				rotateObject();
 			}, false);
 
+			const controller = renderer.xr.getController(0);
+			controller.addEventListener('select', onSelect);
+			scene.add(controller);
+
 		}
+
 
 		function onWindowResize() {
 
@@ -257,13 +262,20 @@
 				current_object = glb.scene;
 				scene.add(current_object);
 				arPlace();
-				// centrer l'objet sur la scène
 				var box = new THREE.Box3();
 				box.setFromObject(current_object);
-				box.center(controls.target);
+				box.getCenter(controls.target);
 				controls.update();
 				render();
 			});
+		}
+
+		function onSelect() {
+			console.log("onSelect appelé, current_object =", current_object, "reticle visible =", reticle.visible);
+			if (current_object && reticle.visible) {
+				current_object.position.setFromMatrixPosition(reticle.matrix);
+				current_object.visible = true;
+			}
 		}
 
 
