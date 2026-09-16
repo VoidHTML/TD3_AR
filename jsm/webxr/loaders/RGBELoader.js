@@ -1,4 +1,4 @@
-import { HDRLoader } from './HDRLoader.js';
+import { HDRLoader } from '../HDRLoader.js';
 
 // @deprecated, r180
 
