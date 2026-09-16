@@ -259,25 +259,47 @@
 		}
 
 		function loadModel(model) {
-			var loader = new GLTFLoader().setPath('3d/');
-			loader.load(model + ".glb", function (glb) {
-				current_object = glb.scene;
-				scene.add(current_object);
-				arPlace();
-				var box = new THREE.Box3();
-				box.setFromObject(current_object);
-				box.getCenter(controls.target);
-				controls.update();
-				render();
-			});
-		}
+			new RGBELoader()
+				.setDataType(THREE.HalfFloatType)
+				.setPath('textures/') // supprimer cette ligne sous Glitch
+				.load('photo_studio_01_1k.hdr', function (texture) {
+					envmap = pmremGenerator.fromEquirectangular(texture).texture;
+					texture.flipY = false; // Désactiver y-flip pour éviterl'avertissement
+					texture.premultiplyAlpha = false; // Désactiver alpha-premult pouréviter l'avertissement
+					scene.environment = envmap;
+					texture.dispose();
+					pmremGenerator.dispose();
+					render();
+					var loader = new GLTFLoader().setPath('3d/'); // supprimer lesetPath sous Glitch
+					loader.load(model + ".glb", function (glb) { // uniquement modelsous Glitch
+						current_object = glb.scene;
+						scene.add(current_object);
+						arPlace();
+						// centrer les objets sur la scène
+						const box = new THREE.Box3().setFromObject(current_object);
+						const center = box.getCenter(new THREE.Vector3());
+						controls.target.copy(center);
+						controls.update();
+						render();
+					});
+				})
 
-		function onSelect() {
-			console.log("onSelect appelé, current_object =", current_object, "reticle visible =", reticle.visible);
-			if (current_object && reticle.visible) {
-				current_object.position.setFromMatrixPosition(reticle.matrix);
-				current_object.visible = true;
+
+			function onSelect() {
+				if (reticle.visible) {
+					current_object.position.setFromMatrixPosition(reticle.matrix);
+					current_object.visible = true;
+				}
 			}
+
+			function onWindowResize() {
+				if (renderer.xr.isPresenting) return;
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
 		}
 
 
