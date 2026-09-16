@@ -24,9 +24,10 @@
 
 		import * as THREE from 'three';
 		import { ARButton } from 'three/addons/webxr/ARButton.js';
-		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-		
+		import { OrbitControls } from 'three/addons/webxr/controls/OrbitControls.js';
+		import { GLTFLoader } from 'three/addons/webxr/loaders/GLTFLoader.js';
+		import { RGBELoader } from 'three/addons/webxr/loaders/RGBELoader.js';
+
 
 		let container;
 		let camera, scene, renderer;
@@ -38,7 +39,7 @@
 
 		let touchDown, touchX, touchY, deltaX, deltaY;
 
-		let current_url = ""; 
+		let current_url = "";
 		$(".ar-object").click(function () {
 			current_url = $(this).attr("id");
 			if (!renderer.xr.isPresenting) {
@@ -64,7 +65,7 @@
 			light.position.set(0.5, 1, 0.25);
 			scene.add(light);
 
-		
+
 
 			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 			renderer.setPixelRatio(window.devicePixelRatio);
@@ -73,7 +74,7 @@
 			renderer.xr.enabled = true;
 			container.appendChild(renderer.domElement);
 
-			
+
 			let options = {
 				requiredFeatures: ['hit-test'],
 				optionalFeatures: ['dom-overlay'],
@@ -251,19 +252,19 @@
 		}
 
 		function loadModel(model) {
-    var loader = new GLTFLoader().setPath('3d/'); 
-    loader.load(model + ".glb", function (glb) { 
-        current_object = glb.scene;
-        scene.add(current_object);
-        arPlace();
-        // centrer l'objet sur la scène
-        var box = new THREE.Box3();
-        box.setFromObject(current_object);
-        box.center(controls.target);
-        controls.update();
-        render();
-    });
-}
+			var loader = new GLTFLoader().setPath('3d/');
+			loader.load(model + ".glb", function (glb) {
+				current_object = glb.scene;
+				scene.add(current_object);
+				arPlace();
+				// centrer l'objet sur la scène
+				var box = new THREE.Box3();
+				box.setFromObject(current_object);
+				box.center(controls.target);
+				controls.update();
+				render();
+			});
+		}
 
 
 
