@@ -188,7 +188,27 @@
 			}
 		});
 
-		//
+		let current_object = null;
+
+		function arPlace() {
+			if (!current_object) {
+				console.warn("Objet non chargé : placement impossible");
+				return;
+			}
+
+			if (reticle.visible) {
+				current_object.position.setFromMatrixPosition(reticle.matrix);
+				current_object.visible = true;
+			}
+		}
+
+		function rotateObject() {
+			if (!current_object) return;
+
+			if (reticle.visible) {
+				current_object.rotation.y += deltaX / 100;
+			}
+		}
 
 		function animate(timestamp, frame) {
 
@@ -258,6 +278,11 @@
 
 		}
 
+		if (!current_object) {
+			console.warn("Aucun objet chargé");
+			return;
+		}
+
 		function loadModel(model) {
 			new RGBELoader()
 				.setDataType(THREE.HalfFloatType)
@@ -278,6 +303,7 @@
 						// centrer les objets sur la scène
 						const box = new THREE.Box3().setFromObject(current_object);
 						const center = box.getCenter(new THREE.Vector3());
+						current_object = null;
 						controls.target.copy(center);
 						controls.update();
 						render();
