@@ -251,32 +251,21 @@
 		}
 
 		function loadModel(model) {
-			new RGBELoader()
-				.setDataType(THREE.HalfFloatType)
-				.setPath('textures/') 
-				.load('photo_studio_01_1k.hdr', function (texture) { 
-					envmap = pmremGenerator.fromEquirectangular(texture).texture;
-					texture.flipY = false; 
-					texture.premultiplyAlpha = false; 
-					scene.environment = envmap;
-					texture.dispose();
-					pmremGenerator.dispose();
-					render();
-					var loader = new GLTFLoader().setPath('3d/'); 
-					loader.load(model + ".glb", function (glb) { 
-						current_object = glb.scene;
-						scene.add(current_object);
-						arPlace();
-						// centrer les objets sur la scène
-						var box = new THREE.Box3();
-						box.setFromObject(current_object);
-						box.center(controls.target);
-						controls.update();
-						render();
-					});
-				});
+    var loader = new GLTFLoader().setPath('3d/'); 
+    loader.load(model + ".glb", function (glb) { 
+        current_object = glb.scene;
+        scene.add(current_object);
+        arPlace();
+        // centrer l'objet sur la scène
+        var box = new THREE.Box3();
+        box.setFromObject(current_object);
+        box.center(controls.target);
+        controls.update();
+        render();
+    });
+}
 
-		}
+
 
 	</script>
 
