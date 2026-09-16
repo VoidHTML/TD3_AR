@@ -28,12 +28,11 @@
 		import { ARButton } from 'three/addons/webxr/ARButton.js';
 		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-		import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 		let container;
 		let camera, scene, renderer;
 
-		let reticle, pmremGenerator, controls, envmap;
+		let reticle, controls;
 		let current_object = null;
 
 		let hitTestSource = null;
@@ -85,9 +84,6 @@
 			document.body.appendChild(ARButton.createButton(renderer, options));
 
 			//
-
-			pmremGenerator = new THREE.PMREMGenerator(renderer);
-			pmremGenerator.compileEquirectangularShader();
 
 			controls = new OrbitControls(camera, renderer.domElement);
 			controls.addEventListener('change', render);
@@ -269,31 +265,18 @@
 		}
 
 		function loadModel(model) {
-			new RGBELoader()
-				.setDataType(THREE.HalfFloatType)
-				.setPath('textures/') // supprimer cette ligne sous Glitch
-				.load('photo_studio_01_1k.hdr', function (texture) { // adapter le chemin du fichier hdr en fonction de la plateforme que vous utilisez
-					envmap = pmremGenerator.fromEquirectangular(texture).texture;
-					texture.flipY = false; // Désactiver y-flip pour éviter l'avertissement
-					texture.premultiplyAlpha = false; // Désactiver alpha-premult pour éviter l'avertissement
-					scene.environment = envmap;
-					texture.dispose();
-					pmremGenerator.dispose();
-					render();
-					var loader = new GLTFLoader().setPath('3d/'); // supprimer le setPath sous Glitch
-					loader.load(model + ".glb", function (glb) { // uniquement model sous Glitch
-						current_object = glb.scene;
-						scene.add(current_object);
-						arPlace();
-						// centrer les objets sur la scène
-						const box = new THREE.Box3().setFromObject(current_object);
-						const center = box.getCenter(new THREE.Vector3());
-						controls.target.copy(center);
-						controls.update();
-						render();
-					});
-				});
-
+			var loader = new GLTFLoader().setPath('3d/'); // supprimer le setPath sous Glitch
+			loader.load(model + ".glb", function (glb) { // uniquement model sous Glitch
+				current_object = glb.scene;
+				scene.add(current_object);
+				arPlace();
+				// centrer les objets sur la scène
+				const box = new THREE.Box3().setFromObject(current_object);
+				const center = box.getCenter(new THREE.Vector3());
+				controls.target.copy(center);
+				controls.update();
+				render();
+			});
 		}
 
 	</script>
