@@ -39,17 +39,15 @@
 		let hitTestSourceRequested = false;
 
 		let touchDown, touchX, touchY, deltaX, deltaY;
+		let placedObjects = [];
 
 		let current_url = "";
+
+		// Un seul gestionnaire de clic pour les items du menu
 		$(".ar-object").click(function () {
 			current_url = $(this).attr("id");
-			if (!renderer.xr.isPresenting) {
-				if (current_object != null) {
-					scene.remove(current_object);
-				}
-				loadModel(current_url);
-			}
-		})
+			loadModel(current_url);
+		});
 
 		init();
 
@@ -139,7 +137,6 @@
 				rotateObject();
 			}, false);
 
-			// Tap sur l'écran en AR pour placer l'objet (équivalent du bouton PLACE)
 			const controller = renderer.xr.getController(0);
 			controller.addEventListener('select', onSelect);
 			scene.add(controller);
@@ -164,9 +161,8 @@
 		}
 
 		function rotateObject() {
-			if (current_object && reticle.visible) {
-				current_object.rotation.y += deltaX / 100;
-			}
+			if (!current_object || !reticle.visible) return;
+			current_object.rotation.y += deltaX / 100;
 		}
 
 		function arPlace() {
@@ -178,6 +174,11 @@
 				current_object.position.setFromMatrixPosition(reticle.matrix);
 				current_object.visible = true;
 			}
+		}
+
+		function resizeSelectedObject(value) {
+			if (!current_object) return;
+			current_object.scale.set(value, value, value);
 		}
 
 		function onSelect() {
@@ -192,6 +193,16 @@
 			if (current_object) {
 				current_object.visible = false;
 			}
+		});
+
+		$("#grow").click(function () {
+			if (!current_object) return;
+			current_object.scale.multiplyScalar(1.2);
+		});
+
+		$("#shrink").click(function () {
+			if (!current_object) return;
+			current_object.scale.multiplyScalar(0.8);
 		});
 
 		//
@@ -265,11 +276,25 @@
 		}
 
 		function loadModel(model) {
+			if (!renderer.xr.isPresenting && current_object) {
+				scene.remove(current_object);
+			}
+
 			var loader = new GLTFLoader().setPath('3d/'); // supprimer le setPath sous Glitch
-			loader.load(model + ".glb", function (glb) { // uniquement model sous Glitch
-				current_object = glb.scene;
-				scene.add(current_object);
-				arPlace();
+			loader.load(model + ".glb", function (glb) {
+				const obj = glb.scene;
+				scene.add(obj);
+				placedObjects.push(obj);
+				current_object = obj; // l'objet sélectionné
+
+				if (renderer.xr.isPresenting) {
+					// en AR : positionner via le réticule si possible
+					arPlace();
+				} else {
+					// hors AR : objet visible directement pour prévisualisation à la souris
+					obj.visible = true;
+				}
+
 				// centrer les objets sur la scène
 				const box = new THREE.Box3().setFromObject(current_object);
 				const center = box.getCenter(new THREE.Vector3());
@@ -287,12 +312,13 @@
 			<a class="ar-object" id="1" href="#">Canapé</a>
 			<a class="ar-object" id="2" href="#">Potion</a>
 			<a class="ar-object" id="3" href="#">Ultramarine</a>
-			
 		</div>
 
 		<div id="container" style="position: fixed;"></div>
 		<span style="font-size:30px;cursor:pointer;position: absolute;" onclick="openNav()">&#9776; open</span>
 		<button type="button" id="place-button">PLACE</button>
+		<button type="button" id="grow" style="position:absolute; bottom:70px; left:calc(50% - 60px);">+</button>
+		<button type="button" id="shrink" style="position:absolute; bottom:70px; left:calc(50% + 20px);">-</button>
 	</div>
 
 	<script>
